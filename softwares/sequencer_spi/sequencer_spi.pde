@@ -73,22 +73,22 @@ int pitch[16] = {
   };
 
 int pitch2[16] = {
-  60,  //1 
-  70, 
-  600, 
-  70,
-  80, 
+  120,  //1 
+  120, 
   90, 
-  80, 
-  90,  //8
-  100,  
-  110,
-  100,
-  110,
+  80,
+  120, 
+  120, 
+  90, 
+  80,  //8
+  120,  
   120,
-  110,
+  90,
+  80,
   120,
-  130,  //16
+  120,
+  90,
+  80,  //16
   };
 
 int pitch3[16] = {
@@ -294,7 +294,7 @@ void sequencer_step() {
     }
     else {
       changeTempo();
-      pickBank();
+      buildPitchBank();
       t=0;
     }
     toggle_led();
@@ -338,19 +338,24 @@ void changeTempo() {
    Serial.println(curTempo);
 }
 
-void pickBank() {  
-  int pivot = map(curSpeed, 0, maxSpeed, 0, 15);  
-  pivot = constrain(pivot, 0, 15);
-
-  for (int i = 0; i < 16; i++){
-    if (i > pivot) {
-      pitchBank[i] = pitch2[i];      
-    }
-    else {
-     pitchBank[i] = pitch[i];
-    }    
+void buildPitchBank() {  
+  int ratio = map(curSpeed, 0, maxSpeed, 0, 15);
+  int r1 = 15 - ratio;
+  int r2 = ratio;
+  
+  int i = 0;
+  for(int j = 0; j < r1; j++) {
+    pitchBank[i] = pitch[j];
+    i++;
   }
-  Serial.print("\tpivot=:");
-  Serial.println(pivot);
+  for(int k = 0; k < r2; k++) {
+    pitchBank[i] = pitch2[k];
+    i++;
+  }
+
+  Serial.print("\r1, r2=: ");
+  Serial.print(r1);
+  Serial.print(",");
+  Serial.println(r2);
   
 }
