@@ -30,7 +30,8 @@ int ledPin =  5;    // LED connected to digital pin 13
 int t = 0;
 int l = 0; // led toggle
 
-int tempo = 100; // global sequencer tempo
+// int tempo = 100; // global sequencer tempo // replaced by tempo() function
+int curTempo;
 byte pot=0;
 byte resistance=0;
 
@@ -39,7 +40,9 @@ unsigned long startTime = micros();	// start time for wheel rotation in microsec
 unsigned long resetTime = 10000000;
 
 unsigned long thisStep = millis();
-unsigned long nextStep = millis() + tempo;
+unsigned long nextStep = millis() + curTempo;
+
+double curSpeed;
 
 
 int c;
@@ -187,7 +190,7 @@ void setup()   {
   
   Serial.begin(9600);
     
-
+  changeTempo();
 }
 
 
@@ -199,8 +202,6 @@ void loop()
   measure_speed();  
   sequencer_step();
 
-
-   
 
   //Serial.println(pitch3[t]);
   write_pot(CHANNEL_A,pitch2[t]);
@@ -216,28 +217,24 @@ void measure_speed() {
   unsigned long currentTime;
   
    if (micros() < resetTime) {
+     
     s = analogRead(HALL_EFFECT);
-
+    
     if (s > (mean + sensitivity) || s < (mean - sensitivity)) {
       currentTime = micros();
-
+    
       if(currentTime < startTime + 10000) {
         startTime = currentTime;
-      }
-      else
-      {
+    
+      } else {
         toggle_led();
         numWheelRotations++;
         calculate_speed(currentTime - startTime);
-
         startTime = currentTime;
-        
       }
     }
-    
-    resetTime = micros() + 1000; 
   }
-  
+    resetTime = micros() + 1000;  
 }
 
  
@@ -261,25 +258,31 @@ void calculate_speed(unsigned long duration){
   int m = map(s, 1, 100, 100, 1);
   //tempo = m*10;
   
-  Serial.println(m);
+//  Serial.println(mph);
   
-  
+  curSpeed = speedkm;
  
 }
 
 void sequencer_step() {
-  
-  if (millis() > nextStep) {
+  int curTime = millis(); 
+
+  if (curTime > nextStep) {
+    
     if(t<MAX) {
       t+=1;
       pitch[1] = random(10);
     }
     else {
+      changeTempo();
       t=0;
     }
     toggle_led();
-    Serial.println(t);
-    nextStep = millis() + tempo;
+    
+    //Serial.println(t);
+    //Serial.println(millis());
+    //Serial.println(millis() - curTime);
+    nextStep = curTime + curTempo; 
   }
 }
 
@@ -307,3 +310,15 @@ void toggle_led() {
      }
 
 }
+
+void changeTempo() {
+
+  
+   curTempo = map(curSpeed, 0, 60, 180, 20);
+
+   Serial.print("\t");
+   Serial.print("Current Tempo: ");
+   Serial.println(curTempo);
+}
+
+
