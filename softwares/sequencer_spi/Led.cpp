@@ -8,18 +8,19 @@
 Led::Led(pinNumber) {
 	pinMode(pinNumber, OUTPUT);
 	this.pinNumber = pinNumber;
-	status = 0;
+	status = FALSE;
 	
 }
 
-Led::toggle() {
-	if(status == 0) {
+boolean Led::toggle() {
+	if(status == FALSE) {
 		digitalWrite(pinNumber, HIGH);
-		status = 1;
+		status = TRUE;
 	}
 	else {
 		digitalWrite(pinNumber, LOW);
-		status == 0;
+		status == FALSE;
 	}
 	
+	return status;
 }

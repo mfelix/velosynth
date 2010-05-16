@@ -10,6 +10,7 @@ Instantiate a new Led object like this, where pinNumber represents the id of the
 	anLed = Led.new(pinNumber);
 Then, anytime you want to toggle the LED, just call your object's toggle method, like so:
 	anLed.toggle();
+This method returns a boolean value indicating the state of the LED after the method executes. 
 */
 
 #ifndef LED_H
