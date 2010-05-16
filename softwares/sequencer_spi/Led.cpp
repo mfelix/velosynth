@@ -6,6 +6,7 @@
 #include "Led.h"
 
 Led::Led(pinNumber) {
+	pinMode(pinNumber, OUTPUT);
 	this.pinNumber = pinNumber;
 	status = 0;
 	
