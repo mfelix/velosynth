@@ -43,49 +43,52 @@ unsigned long thisStep = millis();
 unsigned long nextStep = millis() + curTempo;
 
 double curSpeed;
-
+double maxSpeed =  25;
 
 int c;
 
 int k[8] = {1, 255, 255, 255, 1, 255, 255, 255};
 
 #define MAX 15
+
+int pitchBank[16];
+
 int pitch[16] = {
-  1,  //1 
-  50, 
-  1, 
-  50,
-  0, 
-  50, 
-  50, 
-  50,  //8
-  50,  
-  50,
-  100,
+  5,  //1 
+  10, 
+  5, 
   10,
-  0,
-  100,
-  10,
-  200,  //16
+  10, 
+  15, 
+  10, 
+  15,  //8
+  15,  
+  20,
+  15,
+  20,
+  20,
+  25,
+  30,
+  25,  //16
   };
 
 int pitch2[16] = {
-  20,  //1 
-  20, 
-  20, 
-  10,
-  10, 
-  10, 
-  10, 
-  10,  //8
-  30,  
-  30,
-  30,
-  30,
-  2,
-  2,
-  2,
-  2,  //16
+  60,  //1 
+  70, 
+  600, 
+  70,
+  80, 
+  90, 
+  80, 
+  90,  //8
+  100,  
+  110,
+  100,
+  110,
+  120,
+  110,
+  120,
+  130,  //16
   };
 
 int pitch3[16] = {
@@ -147,10 +150,28 @@ int rhythm2[16] = {
   0,  //16
   }; 
   
+int rhythm3[16] = {
+  255,  //1 
+  255, 
+  255, 
+  255,
+  255, 
+  255, 
+  255, 
+  255,  //8
+  255,  
+  255,
+  255,
+  255,
+  255,
+  255,
+  255,
+  255,  //16
+  };   
+  
 int duration[8] = {10, 10, 10, 1, 1, 10, 10, 10};
 int pattern1[8] = {5, 10, 50, 10, 5, 77, 5, 10};
 int pattern2[8] = {333, 111, 444, 999, 111, 777, 333, 522};
-
 
 
 char spi_transfer(volatile char data)
@@ -202,12 +223,10 @@ void loop()
   measure_speed();  
   sequencer_step();
 
-
-  //Serial.println(pitch3[t]);
-  write_pot(CHANNEL_A,pitch2[t]);
-  write_pot(CHANNEL_B,rhythm[t]);
-  write_pot(CHANNEL_C,rhythm[t]);
-  write_pot(CHANNEL_D,rhythm[t]);
+  write_pot(CHANNEL_A,pitchBank[t]);
+  write_pot(CHANNEL_B,rhythm3[t]);
+  write_pot(CHANNEL_C,rhythm3[t]);
+  write_pot(CHANNEL_D,rhythm3[t]);
   
 }
 
@@ -256,9 +275,9 @@ void calculate_speed(unsigned long duration){
 
   int s = map(mph, 1, 25, 1, 100);
   int m = map(s, 1, 100, 100, 1);
-  //tempo = m*10;
   
-//  Serial.println(mph);
+  Serial.print("speed km: ");
+  Serial.println(speedkm);
   
   curSpeed = speedkm;
  
@@ -275,13 +294,11 @@ void sequencer_step() {
     }
     else {
       changeTempo();
+      pickBank();
       t=0;
     }
     toggle_led();
     
-    //Serial.println(t);
-    //Serial.println(millis());
-    //Serial.println(millis() - curTime);
     nextStep = curTime + curTempo; 
   }
 }
@@ -314,11 +331,26 @@ void toggle_led() {
 void changeTempo() {
 
   
-   curTempo = map(curSpeed, 0, 60, 180, 20);
+   curTempo = map(curSpeed, 0, 33, 180, 20);
 
    Serial.print("\t");
    Serial.print("Current Tempo: ");
    Serial.println(curTempo);
 }
 
+void pickBank() {  
+  int pivot = map(curSpeed, 0, maxSpeed, 0, 15);  
+  pivot = constrain(pivot, 0, 15);
 
+  for (int i = 0; i < 16; i++){
+    if (i > pivot) {
+      pitchBank[i] = pitch2[i];      
+    }
+    else {
+     pitchBank[i] = pitch[i];
+    }    
+  }
+  Serial.print("\tpivot=:");
+  Serial.println(pivot);
+  
+}
