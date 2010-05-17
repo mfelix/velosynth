@@ -5,21 +5,20 @@
 
 #include "Led.h"
 
-Led::Led(pinNumber) {
+Led::Led(int pinNumber) {
 	pinMode(pinNumber, OUTPUT);
-	this.pinNumber = pinNumber;
-	status = FALSE;
-	
+	this->pinNumber = pinNumber;
+	status = 0;
 }
 
 boolean Led::toggle() {
-	if(status == FALSE) {
+	if(status == 0) {
 		digitalWrite(pinNumber, HIGH);
-		status = TRUE;
+		status = 1;
 	}
 	else {
 		digitalWrite(pinNumber, LOW);
-		status == FALSE;
+		status == 0;
 	}
 	
 	return status;

@@ -19,14 +19,14 @@ This method returns a boolean value indicating the state of the LED after the me
 #include "WProgram.h"
 
 class Led {
-	Led(pinNumber);
-	
+	Led(int pinNumber);
+
 	boolean toggle();
 	
 private:
 	int pinNumber;
 	boolean status;
-}
+};
 
 
 #endif
