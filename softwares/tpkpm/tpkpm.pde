@@ -2,7 +2,8 @@
   ad5206-controlled / sequencer
   
 */
- 
+#include <math.h>
+
 #define DATAOUT 11//MOSI
 #define DATAIN 12//MISO - not used, but part of builtin SPI
 #define SPICLOCK  13//sck
@@ -42,8 +43,9 @@ unsigned long resetTime = 10000000;
 unsigned long thisStep = millis();
 unsigned long nextStep = millis() + curTempo;
 
-double curSpeed;
-double maxSpeed =  25;
+int curSpeed;
+const int maxSpeed =  25; //kpm
+const int trackLength = 16;
 
 int c;
 
@@ -51,67 +53,8 @@ int k[8] = {1, 255, 255, 255, 1, 255, 255, 255};
 
 #define MAX 15
 
-int pitchBank[16];
+int trackBank[maxSpeed][trackLength];
 
-int pitch[16] = {
-  5,  //1 
-  10, 
-  5, 
-  10,
-  10, 
-  15, 
-  10, 
-  15,  //8
-  15,  
-  20,
-  15,
-  20,
-  20,
-  25,
-  30,
-  25,  //16
-  };
-
-int pitch2[16] = {
-  120,  //1 
-  120, 
-  90, 
-  80,
-  120, 
-  120, 
-  90, 
-  80,  //8
-  120,  
-  120,
-  90,
-  80,
-  120,
-  120,
-  90,
-  80,  //16
-  };
-
-int pitch3[16] = {
-  0,  //1 
-  16, 
-  32, 
-  64,
-  80, 
-  96, 
-  112, 
-  128,  //8
-  144,  
-  160,
-  176,
-  192,
-  208,
-  224,
-  240,
-  255,  //16
-  };
-  
-
-  
 int rhythm[16] = {
   0,  //1 
   0, 
@@ -210,7 +153,7 @@ void setup()   {
   controller_init();
   
   Serial.begin(9600);
-    
+  buildTrackBank();
   changeTempo();
 }
 
@@ -218,12 +161,11 @@ void setup()   {
 
 void loop()                     
 {
-  
-  
+
   measure_speed();  
   sequencer_step();
 
-  write_pot(CHANNEL_A,pitchBank[t]);
+  write_pot(CHANNEL_A,trackBank[curSpeed - 1][t]);
   write_pot(CHANNEL_B,rhythm3[t]);
   write_pot(CHANNEL_C,rhythm3[t]);
   write_pot(CHANNEL_D,rhythm3[t]);
@@ -237,7 +179,10 @@ void measure_speed() {
   
    if (micros() < resetTime) {
      
-    s = analogRead(HALL_EFFECT);
+     // this is just to test when there is no bike
+     //s = sin(micros()) * 2 * sensitivity;
+     s = 508;
+     //s = analogRead(HALL_EFFECT);
     
     if (s > (mean + sensitivity) || s < (mean - sensitivity)) {
       currentTime = micros();
@@ -271,7 +216,7 @@ void calculate_speed(unsigned long duration){
   unsigned long speedkm = speed100m / 10; // km per hour
   unsigned long speedRem = speed100m - (speedkm * 10); // the bit after the decimal point
  
- float mph = speedkm / 1.609344;
+  float mph = speedkm / 1.609344;
 
   int s = map(mph, 1, 25, 1, 100);
   int m = map(s, 1, 100, 100, 1);
@@ -279,7 +224,8 @@ void calculate_speed(unsigned long duration){
   Serial.print("speed km: ");
   Serial.println(speedkm);
   
-  curSpeed = speedkm;
+  curSpeed = 3;
+  // curSpeed = speedkm;
  
 }
 
@@ -290,11 +236,9 @@ void sequencer_step() {
     
     if(t<MAX) {
       t+=1;
-      pitch[1] = random(10);
     }
     else {
       changeTempo();
-      buildPitchBank();
       t=0;
     }
     toggle_led();
@@ -329,8 +273,6 @@ void toggle_led() {
 }
 
 void changeTempo() {
-
-  
    curTempo = map(curSpeed, 0, 33, 180, 20);
 
    Serial.print("\t");
@@ -338,24 +280,10 @@ void changeTempo() {
    Serial.println(curTempo);
 }
 
-void buildPitchBank() {  
-  int ratio = map(curSpeed, 0, maxSpeed, 0, 15);
-  int r1 = 15 - ratio;
-  int r2 = ratio;
-  
-  int i = 0;
-  for(int j = 0; j < r1; j++) {
-    pitchBank[i] = pitch[j];
-    i++;
+void buildTrackBank() {
+  for (int i; i < maxSpeed; i++){
+    for (int j; j < trackLength; j++){
+      trackBank[i][j] = random(0,200);
+    }
   }
-  for(int k = 0; k < r2; k++) {
-    pitchBank[i] = pitch2[k];
-    i++;
-  }
-
-  Serial.print("\r1, r2=: ");
-  Serial.print(r1);
-  Serial.print(",");
-  Serial.println(r2);
-  
 }
