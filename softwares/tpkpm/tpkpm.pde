@@ -181,8 +181,8 @@ void measure_speed() {
      
      // this is just to test when there is no bike
      //s = sin(micros()) * 2 * sensitivity;
-     s = 508;
-     //s = analogRead(HALL_EFFECT);
+     //s = 508;
+     s = analogRead(HALL_EFFECT);
     
     if (s > (mean + sensitivity) || s < (mean - sensitivity)) {
       currentTime = micros();
@@ -224,8 +224,8 @@ void calculate_speed(unsigned long duration){
   Serial.print("speed km: ");
   Serial.println(speedkm);
   
-  curSpeed = 3;
-  // curSpeed = speedkm;
+  //curSpeed = 3;
+  curSpeed = speedkm;
  
 }
 
@@ -280,10 +280,16 @@ void changeTempo() {
    Serial.println(curTempo);
 }
 
+
 void buildTrackBank() {
-  for (int i; i < maxSpeed; i++){
-    for (int j; j < trackLength; j++){
-      trackBank[i][j] = random(0,200);
+  for (int i = 0; i < maxSpeed; i++){
+    for (int j = 0; j < trackLength; j++){
+      trackBank[i][j] = random(200);
+      Serial.print("t=");
+      Serial.print(t);
+      Serial.println(trackBank[i][j]);
     }
   }
 }
+
+
