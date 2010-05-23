@@ -5,20 +5,22 @@
 
 #include "Speedometer.h"
 
-Speedometer::Speedometer(int sensorPin, int wheelCircumference, int mean, int sensitivity) {
+Speedometer::Speedometer(int sensorPin, int wheelCircumference, unsigned int mean, unsigned int sensitivity, unsigned int pollingInterval) {
 	this->sensorPin = sensorPin;
 	this->wheelCircumference = wheelCircumference;
 	this->mean = mean;
 	this->sensitivity = sensitivity;
+  this->pollingInterval = pollingInterval;
 
 	startTime = micros();	// start time for wheel rotation in microseconds
-	resetTime = 10000000;
 
-	currentSpeed = 0;
+	currentSpeed = 0; //This is a guess.
 	wheelRotations = 0;
+	
+  speedCalcCoefficient = wheelCircumference * 3600;
 }
 
-unsigned long Speedometer::getSpeed() {
+unsigned long Speedometer::getSpeedKmph() {
 	return measureSpeed();
 }
 
@@ -29,46 +31,30 @@ float Speedometer::getSpeedMph() {
 
 // PRIVATE
 //
+// Speed is returned in km/hr
 unsigned long Speedometer::measureSpeed() {
   	int sensorReading;
   	unsigned long currentTime;
 	
-	
-   	if (micros() < resetTime) {
+	  // Unsure if this if statement is necessary, should test to see what it does exactly.
+   	if (!resetTime || micros() < resetTime) {
      	sensorReading = analogRead(sensorPin);
     
     	if (sensorReading > (mean + sensitivity) || sensorReading < (mean - sensitivity)) {
       		currentTime = micros();
-			
+			    
+			    // debounce
+			    // This assumes that the bike is traveling ~< 756 kph
       		if(currentTime < startTime + 10000) {
         		startTime = currentTime;
       		} else {
         		wheelRotations++;
-        		currentSpeed = calculateSpeed(currentTime - startTime);
+            currentSpeed = speedCalcCoefficient / (currentTime - startTime);
         		startTime = currentTime;
       		}
     	}
   	}
     
-	resetTime = micros() + 1000;  
+	resetTime = micros() + pollingInterval;  
 	return currentSpeed;
-}
-
-unsigned long Speedometer::calculateSpeed(unsigned long duration){
-	// Calculate distance
-	// Integer operations are significantly faster on the Arduino
-	unsigned long distancem = wheelRotations * wheelCircumference / 1000; // distance in metres
-	unsigned long distancekm = distancem / 1000; // distance in km (this truncates the number)
-	unsigned long distanceRem = distancem - (distancekm * 1000); // the bit after the decimal point
-
-	// calculate speed
-	// mm / microsecond x 1000 is mm / millisecond
-	// mm / millisecond is equivalent to m / sec
-	// m / sec x 60 x 60 is m / hr
-	// m / hr / 1000 is km / hr
-	unsigned long speed100m = wheelCircumference * 36000 / duration; // 100m per hour
-	unsigned long speedkm = speed100m / 10; // km per hour
-	unsigned long speedRem = speed100m - (speedkm * 10); // the bit after the decimal point
-
-	return speedkm;
 }

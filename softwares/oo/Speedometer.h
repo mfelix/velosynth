@@ -31,27 +31,28 @@ return cached speed.
 class Speedometer {
 public:
 	// FIXME: Add "Update Interval" logic
-	Speedometer(int sensorPin, int wheelCircumference, int mean, int sensitivity); // or something
+	Speedometer(int sensorPin, int wheelCircumference, unsigned int mean, unsigned int sensitivity, unsigned int pollingInterval); // or something
 	
-	unsigned long getSpeed();	
+	unsigned long getSpeedKmph();	
 	float getSpeedMph();
 	
 private:
 	int sensorPin; 
 	int wheelCircumference; // in milimeters
-	
+  unsigned long speedCalcCoefficient;
+		
 	unsigned int wheelRotations; 
 	
 	unsigned long resetTime;
 	unsigned long startTime;
 	
 	unsigned long measureSpeed();
-	unsigned long calculateSpeed(unsigned long duration);
 	unsigned long currentSpeed;
 	
 	// Hall effect sensor setup
 	unsigned int mean;
 	unsigned int sensitivity;
+  unsigned int pollingInterval;
 };
 
 

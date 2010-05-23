@@ -12,14 +12,33 @@ Led::Led(int pinNumber) {
 }
 
 boolean Led::toggle() {
-	if(status == 0) {
-		digitalWrite(pinNumber, HIGH);
-		status = 1;
+	if(0 == status) {
+    _on();
 	}
 	else {
-		digitalWrite(pinNumber, LOW);
-		status == 0;
+    _off();
 	}
-	
 	return status;
+}
+
+void Led::on() {
+  if(0 == status) {
+    _on();
+  }
+}
+
+void Led::off() {
+  if(1 == status) {
+    _off();
+  }
+}
+
+void Led::_on() {
+    digitalWrite(pinNumber, HIGH);
+    status = 1;
+}
+
+void Led::_off() {
+    digitalWrite(pinNumber, LOW);
+    status = 0;
 }

@@ -2,7 +2,6 @@
   ad5206-controlled / sequencer
   
 */
-#include <math.h>
 #include "Led.h"
 #include "Speedometer.h"
 
@@ -23,13 +22,14 @@ const int LEDPIN = 5;
 const int HALL_EFFECT_PIN = 0;
 const int MEAN = 508;  // sensor at rest (no magnet)
 const int SENSITIVITY = 40;  // sensor sensitivity
+const int POLLING_INTERVAL = 1000;
 
 // Other environmental constants
 const unsigned int WHEEL_CIRCUM = 2100; // bike wheel circumference in mm (2100 = almost exact for 700-23c wheels)
 
 // Initialize I/O Objects
 Led led(LEDPIN);
-Speedometer speedometer(HALL_EFFECT_PIN, WHEEL_CIRCUM, MEAN, SENSITIVITY);
+Speedometer speedometer(HALL_EFFECT_PIN, WHEEL_CIRCUM, MEAN, SENSITIVITY, POLLING_INTERVAL);
 
 int t = 0;
 
@@ -212,7 +212,7 @@ void loop()
 
 //  write_pot(CHANNEL_A,majorScale[t]);
 
-  write_pot(CHANNEL_A,trackBank[speedometer.getSpeed() - 1][t]);
+  write_pot(CHANNEL_A,trackBank[speedometer.getSpeedKmph() - 1][t]);
   write_pot(CHANNEL_B,rhythm3[t]);
   write_pot(CHANNEL_C,rhythm3[t]);
   write_pot(CHANNEL_D,rhythm3[t]);
@@ -252,7 +252,7 @@ byte write_pot(int address, int value)
 
 
 void changeTempo() {
-   curTempo = map(speedometer.getSpeed(), 0, 33, 180, 20);
+   curTempo = map(speedometer.getSpeedKmph(), 0, 33, 180, 20);
 
    Serial.print("\t");
    Serial.print("Current Tempo: ");

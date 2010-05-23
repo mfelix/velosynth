@@ -23,10 +23,15 @@ public:
 	Led(int pinNumber);
 
 	boolean toggle();
+  void on();
+  void off();
 	
 private:
 	int pinNumber;
 	boolean status;
+	
+  void _on();
+  void _off();
 };
 
 
