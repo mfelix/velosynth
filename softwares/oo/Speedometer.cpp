@@ -5,19 +5,22 @@
 
 #include "Speedometer.h"
 
-Speedometer::Speedometer(int sensorPin, int wheelCircumference, unsigned int mean, unsigned int sensitivity, unsigned int pollingInterval) {
+Speedometer::Speedometer(int sensorPin, int wheelCircumference, unsigned int mean, unsigned int sensitivity, unsigned long pollingInterval) {
 	this->sensorPin = sensorPin;
 	this->wheelCircumference = wheelCircumference;
 	this->mean = mean;
 	this->sensitivity = sensitivity;
-  this->pollingInterval = pollingInterval;
+	this->pollingInterval = pollingInterval;
 
-	startTime = micros();	// start time for wheel rotation in microseconds
+	startTime = micros(); // start time for wheel rotation in microseconds
 
-	currentSpeed = 0; //This is a guess.
-	wheelRotations = 0;
-	
-  speedCalcCoefficient = wheelCircumference * 3600;
+	currentSpeed = 0; // This is a guess: assuming that 
+	resetTime = 0; // Ensures that resetTime is properly initalized below
+	wheelRotations = 0; // Accumulator, current unused but could be used for distance measurements 
+
+	// The number '3600' is a conversion from mm/microsecond to km/hr
+	// We need to cast 3600 as an unsigned long for the computation to be correct.
+	speedCalcCoefficient = this->wheelCircumference * (unsigned long)3600;
 }
 
 unsigned long Speedometer::getSpeedKmph() {
@@ -25,6 +28,7 @@ unsigned long Speedometer::getSpeedKmph() {
 }
 
 float Speedometer::getSpeedMph() {
+	// Float arithmetic is inefficient and should be avoided when necessary.
 	float mph = measureSpeed() / 1.609344;	
 	return mph;
 }
@@ -35,26 +39,29 @@ float Speedometer::getSpeedMph() {
 unsigned long Speedometer::measureSpeed() {
   	int sensorReading;
   	unsigned long currentTime;
-	
-	  // Unsure if this if statement is necessary, should test to see what it does exactly.
-   	if (!resetTime || micros() < resetTime) {
-     	sensorReading = analogRead(sensorPin);
-    
-    	if (sensorReading > (mean + sensitivity) || sensorReading < (mean - sensitivity)) {
-      		currentTime = micros();
-			    
-			    // debounce
-			    // This assumes that the bike is traveling ~< 756 kph
-      		if(currentTime < startTime + 10000) {
-        		startTime = currentTime;
-      		} else {
-        		wheelRotations++;
-            currentSpeed = speedCalcCoefficient / (currentTime - startTime);
-        		startTime = currentTime;
+
+	// Check to see if resetTime has been initialized OR if it is time to gather a new sensor reading
+	if ((resetTime == 0) || (micros() > resetTime)) {
+			sensorReading = analogRead(sensorPin);
+
+			// Check to see if sensor data is within appropriate range; discard all data points that are not relevant
+			if (sensorReading > (mean + sensitivity) || sensorReading < (mean - sensitivity)) {
+				currentTime = micros();
+
+			    // Debounce: ensure that invalid data are not taken into account
+			    // This assumes that the bike is traveling less than ~756 km/hr
+				if(currentTime < startTime + 10000) {
+					startTime = currentTime;
+				} else {
+					wheelRotations++;
+					currentSpeed = speedCalcCoefficient / (currentTime - startTime);
+					startTime = currentTime;
       		}
     	}
+		// resetTime is the earliest we will collect data to find a new speed.
+		resetTime = micros() + pollingInterval;
   	}
-    
-	resetTime = micros() + pollingInterval;  
+
+	// Return calculated OR cached speed.
 	return currentSpeed;
 }

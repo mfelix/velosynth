@@ -22,11 +22,10 @@ const int LEDPIN = 5;
 const int HALL_EFFECT_PIN = 0;
 const int MEAN = 508;  // sensor at rest (no magnet)
 const int SENSITIVITY = 40;  // sensor sensitivity
-const int POLLING_INTERVAL = 1000;
+const unsigned long POLLING_INTERVAL = 1000;
 
 // Other environmental constants
 const unsigned int WHEEL_CIRCUM = 2100; // bike wheel circumference in mm (2100 = almost exact for 700-23c wheels)
-
 // Initialize I/O Objects
 Led led(LEDPIN);
 Speedometer speedometer(HALL_EFFECT_PIN, WHEEL_CIRCUM, MEAN, SENSITIVITY, POLLING_INTERVAL);
