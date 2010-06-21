@@ -4,12 +4,13 @@
 */
 #include "Led.h"
 #include "Speedometer.h"
+#include "Envelope.h"
 
 #define DATAOUT 11//MOSI
 #define DATAIN 12//MISO - not used, but part of builtin SPI
 #define SPICLOCK  13//sck
-#define SLAVESELECT 10//ss
-
+#define SLAVESELECT 8//ss
+#define SS 10 //fake slave select
 #define CHANNEL_A 5
 #define CHANNEL_B 4
 #define CHANNEL_C 3
@@ -29,6 +30,10 @@ const unsigned int WHEEL_CIRCUM = 2100; // bike wheel circumference in mm (2100 
 // Initialize I/O Objects
 Led led(LEDPIN);
 Speedometer speedometer(HALL_EFFECT_PIN, WHEEL_CIRCUM, MEAN, SENSITIVITY, POLLING_INTERVAL);
+const int ENVELOPE_LENGTH = 800;
+
+Envelope envelope(ENVELOPE_LENGTH, 0, 255);
+unsigned char note[ENVELOPE_LENGTH];
 
 int t = 0;
 
@@ -179,6 +184,7 @@ void controller_init() {
   pinMode(DATAIN, INPUT);
   pinMode(SPICLOCK,OUTPUT);
   pinMode(SLAVESELECT,OUTPUT);
+  pinMode(SS, OUTPUT);
   digitalWrite(SLAVESELECT,HIGH); //disable device
   // SPCR = 01010000 
   //interrupt disabled,spi enabled,msb 1st,master,clk low when idle,
@@ -197,24 +203,34 @@ void setup()   {
 
   controller_init();
   
-  Serial.begin(9600);
+  // Serial.begin(9600);
   buildTrackBank();
   changeTempo();
+  
+  envelope.generateNote(note);
+  // Serial.print("Note Generated!");
+  write_pot(CHANNEL_A,0);
 }
 
 
 
 void loop()                     
 {
-
-  sequencer_step();
+  
+  //sequencer_step();
 
 //  write_pot(CHANNEL_A,majorScale[t]);
+  for(int i = 0; i < ENVELOPE_LENGTH; i++)
+  {
+    write_pot(CHANNEL_F, int(note[i]));
+    write_pot(CHANNEL_A, int(note[i]));
+  }
 
-  write_pot(CHANNEL_A,trackBank[speedometer.getSpeedKmph() - 1][t]);
-  write_pot(CHANNEL_B,rhythm3[t]);
-  write_pot(CHANNEL_C,rhythm3[t]);
-  write_pot(CHANNEL_D,rhythm3[t]);
+  delay(1000);
+  //write_pot(CHANNEL_A,trackBank[speedometer.getSpeedKmph() - 1][t]);
+  // write_pot(CHANNEL_B,rhythm3[t]);
+  //  write_pot(CHANNEL_C,rhythm3[t]);
+  // write_pot(CHANNEL_D,rhythm3[t]);
   
 }
 
@@ -253,9 +269,9 @@ byte write_pot(int address, int value)
 void changeTempo() {
    curTempo = map(speedometer.getSpeedKmph(), 0, 33, 180, 20);
 
-   Serial.print("\t");
-   Serial.print("Current Tempo: ");
-   Serial.println(curTempo);
+//   Serial.print("\t");
+//   Serial.print("Current Tempo: ");
+//   Serial.println(curTempo);
 }
 
 
