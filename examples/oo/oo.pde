@@ -30,10 +30,6 @@ const unsigned int WHEEL_CIRCUM = 2100; // bike wheel circumference in mm (2100 
 // Initialize I/O Objects
 Led led(LEDPIN);
 Speedometer speedometer(HALL_EFFECT_PIN, WHEEL_CIRCUM, MEAN, SENSITIVITY, POLLING_INTERVAL);
-const int ENVELOPE_LENGTH = 800;
-
-Envelope envelope(ENVELOPE_LENGTH, 0, 255);
-unsigned char note[ENVELOPE_LENGTH];
 
 int t = 0;
 
@@ -203,35 +199,65 @@ void setup()   {
 
   controller_init();
   
-  // Serial.begin(9600);
-  buildTrackBank();
+  Serial.begin(9600);
   changeTempo();
   
-  envelope.generateNote(note);
   // Serial.print("Note Generated!");
   write_pot(CHANNEL_A,0);
 }
 
-
-
 void loop()                     
-{
-  
-  //sequencer_step();
-
-//  write_pot(CHANNEL_A,majorScale[t]);
-  for(int i = 0; i < ENVELOPE_LENGTH; i++)
-  {
-    write_pot(CHANNEL_F, int(note[i]));
-    write_pot(CHANNEL_A, int(note[i]));
-  }
-
-  delay(1000);
+{ 
+  select_note();
+  play_note();
+  // Serial.println('done');
   //write_pot(CHANNEL_A,trackBank[speedometer.getSpeedKmph() - 1][t]);
   // write_pot(CHANNEL_B,rhythm3[t]);
   //  write_pot(CHANNEL_C,rhythm3[t]);
   // write_pot(CHANNEL_D,rhythm3[t]);
-  
+}
+
+int note0[] = {180, 170, 160, 190, 200, 220, 230, 235 };
+int note1[] = {100, 120, 130, 140, 150, 130, 140, 120 };
+int note2[] = {20,  40,  80,  90,  120, 110, 70,  50 };
+int *note;
+
+void select_note() {
+  int step = (micros() / 10000) % 3;
+  switch (step) {
+  case 0:
+    note = note0;
+    break;
+  case 1:
+    note = note1;
+    break;
+  case 2:
+    note = note2;
+    break;
+  }
+}
+
+
+void play_note() {
+  //sequencer_step();
+  for(int i = 0; i < 8; i++) {
+    long ms = micros();
+    write_pot(CHANNEL_B, ( ms / 1500 ) % 255);
+    write_pot(CHANNEL_C, *(note + i));
+    // float diff = abs(sin(i));
+    // diff = diff * (100 + diff);
+    // Serial.print("[p: ");
+    // Serial.print(halfSteps[i]);
+    // Serial.print(" , ");
+    // Serial.print("d: ");
+    // Serial.print(diff);
+    // Serial.print("]");
+    // Serial.print("micros() valu: ");
+    // Serial.print(ms);
+    //   Serial.print("\tdelay valu: ");
+    //   Serial.println(d);
+    delay(1);
+  }
 }
 
 void sequencer_step() {
@@ -261,29 +287,8 @@ byte write_pot(int address, int value)
   digitalWrite(SLAVESELECT,HIGH); //release chip, signal end transfer
 }
 
-
-
-
-
-
 void changeTempo() {
-   curTempo = map(speedometer.getSpeedKmph(), 0, 33, 180, 20);
-
-//   Serial.print("\t");
-//   Serial.print("Current Tempo: ");
-//   Serial.println(curTempo);
-}
-
-
-void buildTrackBank() {
-  for (int i = 0; i < maxSpeed; i++){
-    for (int j = 0; j < trackLength; j++){
-      int lowerBound = map(i, 0, maxSpeed, 0, 15);
-      int rand = random(lowerBound, 15);
-      
-      trackBank[i][j] = majorScale[rand];
-    }
-  }
+  curTempo = map(speedometer.getSpeedKmph(), 0, 33, 180, 20);
 }
 
 
