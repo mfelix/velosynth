@@ -195,46 +195,28 @@ void controller_init() {
   }
 }
   
-void setup()   {                
-
+void setup()   {
   controller_init();
-  
-  Serial.begin(9600);
   changeTempo();
-  
-  // Serial.print("Note Generated!");
   write_pot(CHANNEL_A,0);
+  write_pot(CHANNEL_C,200);
+  // Serial.begin(9600);
 }
 
 void loop()                     
 { 
   select_note();
   play_note();
-  // Serial.println('done');
-  //write_pot(CHANNEL_A,trackBank[speedometer.getSpeedKmph() - 1][t]);
-  // write_pot(CHANNEL_B,rhythm3[t]);
-  //  write_pot(CHANNEL_C,rhythm3[t]);
-  // write_pot(CHANNEL_D,rhythm3[t]);
 }
 
 int note0[] = {180, 170, 160, 190, 200, 220, 230, 235 };
 int note1[] = {100, 120, 130, 140, 150, 130, 140, 120 };
 int note2[] = {20,  40,  80,  90,  120, 110, 70,  50 };
+int *notes[] = {note0, note1, note2};
 int *note;
 
 void select_note() {
-  int step = (micros() / 10000) % 3;
-  switch (step) {
-  case 0:
-    note = note0;
-    break;
-  case 1:
-    note = note1;
-    break;
-  case 2:
-    note = note2;
-    break;
-  }
+  note = notes[(micros() / 2000) % 3];
 }
 
 
@@ -242,8 +224,8 @@ void play_note() {
   //sequencer_step();
   for(int i = 0; i < 8; i++) {
     long ms = micros();
-    write_pot(CHANNEL_B, ( ms / 1500 ) % 255);
-    write_pot(CHANNEL_C, *(note + i));
+    write_pot(CHANNEL_B, ( ms / 1500 ) % 255); // amplitude?
+    write_pot(CHANNEL_C, *(note + i));         // frequency
     // float diff = abs(sin(i));
     // diff = diff * (100 + diff);
     // Serial.print("[p: ");
@@ -254,9 +236,9 @@ void play_note() {
     // Serial.print("]");
     // Serial.print("micros() valu: ");
     // Serial.print(ms);
-    //   Serial.print("\tdelay valu: ");
-    //   Serial.println(d);
-    delay(1);
+    // Serial.print("\tdelay valu: ");
+    // Serial.println(d);
+    delay(20);
   }
 }
 
