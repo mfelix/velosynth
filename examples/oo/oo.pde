@@ -5,12 +5,13 @@
 #include "Led.h"
 #include "Speedometer.h"
 #include "Envelope.h"
+#include "Controller.h"
 
-#define DATAOUT 11//MOSI
-#define DATAIN 12//MISO - not used, but part of builtin SPI
-#define SPICLOCK  13//sck
-#define SLAVESELECT 8//ss
-#define SS 10 //fake slave select
+#define DATAOUT 11
+#define DATAIN 12
+#define SPICLOCK  13
+#define SLAVESELECT 8
+
 #define CHANNEL_A 5
 #define CHANNEL_B 4
 #define CHANNEL_C 3
@@ -30,6 +31,12 @@ const unsigned int WHEEL_CIRCUM = 2100; // bike wheel circumference in mm (2100 
 // Initialize I/O Objects
 Led led(LEDPIN);
 Speedometer speedometer(HALL_EFFECT_PIN, WHEEL_CIRCUM, MEAN, SENSITIVITY, POLLING_INTERVAL);
+
+const int ENVELOPE_LENGTH = 800;
+
+Controller controller(DATAIN, DATAOUT, SPICLOCK, SLAVESELECT);
+Envelope envelope(ENVELOPE_LENGTH, 0, 255);
+unsigned char note[ENVELOPE_LENGTH];
 
 int t = 0;
 
@@ -163,44 +170,12 @@ int duration[8] = {10, 10, 10, 1, 1, 10, 10, 10};
 int pattern1[8] = {5, 10, 50, 10, 5, 77, 5, 10};
 int pattern2[8] = {333, 111, 444, 999, 111, 777, 333, 522};
 
-
-char spi_transfer(volatile char data)
-{
-  SPDR = data;                    // Start the transmission
-  while (!(SPSR & (1<<SPIF)))     // Wait the end of the transmission
-  {
-  };
-  return SPDR;                    // return the received byte
-}
-
-void controller_init() {
-  byte i;
-  byte clr;
-  pinMode(DATAOUT, OUTPUT);
-  pinMode(DATAIN, INPUT);
-  pinMode(SPICLOCK,OUTPUT);
-  pinMode(SLAVESELECT,OUTPUT);
-  pinMode(SS, OUTPUT);
-  digitalWrite(SLAVESELECT,HIGH); //disable device
-  // SPCR = 01010000 
-  //interrupt disabled,spi enabled,msb 1st,master,clk low when idle,
-  //sample on leading edge of clk,system clock/4 (fastest)
-  SPCR = (1<<SPE)|(1<<MSTR);
-  clr=SPSR;
-  clr=SPDR;
-  delay(10);
-  for (i=0;i<6;i++)
-  {
-    write_pot(i,255);
-  }
-}
+void setup()   {                
   
-void setup()   {
-  controller_init();
-  changeTempo();
-  write_pot(CHANNEL_A,0);
-  write_pot(CHANNEL_C,200);
-  // Serial.begin(9600);
+  // Serial.begin(9600);  
+  controller.initialize();
+  envelope.generateNote(note);
+  // Serial.print("Note Generated!");
 }
 
 void loop()                     
@@ -218,7 +193,6 @@ int *note;
 void select_note() {
   note = notes[(micros() / 2000) % 3];
 }
-
 
 void play_note() {
   //sequencer_step();
@@ -239,6 +213,8 @@ void play_note() {
     // Serial.print("\tdelay valu: ");
     // Serial.println(d);
     delay(20);
+    controller.write_pot(CHANNEL_A, i);   
+    controller.write_pot(CHANNEL_C, i);
   }
 }
 
@@ -258,15 +234,6 @@ void sequencer_step() {
     
     nextStep = curTime + curTempo; 
   }
-}
-
-byte write_pot(int address, int value)
-{
-  digitalWrite(SLAVESELECT,LOW);
-  //2 byte opcode
-  spi_transfer(address);
-  spi_transfer(value);
-  digitalWrite(SLAVESELECT,HIGH); //release chip, signal end transfer
 }
 
 void changeTempo() {
