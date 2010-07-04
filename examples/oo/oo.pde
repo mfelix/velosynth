@@ -36,14 +36,11 @@ const int ENVELOPE_LENGTH = 800;
 
 Controller controller(DATAIN, DATAOUT, SPICLOCK, SLAVESELECT);
 Envelope envelope(ENVELOPE_LENGTH, 0, 255);
-unsigned char note[ENVELOPE_LENGTH];
 
 int t = 0;
 
 // int tempo = 100; // global sequencer tempo // replaced by tempo() function
 int curTempo;
-byte pot=0;
-byte resistance=0;
 
 unsigned long thisStep = millis();
 unsigned long nextStep = millis() + curTempo;
@@ -174,7 +171,6 @@ void setup()   {
   
   // Serial.begin(9600);  
   controller.initialize();
-  envelope.generateNote(note);
   // Serial.print("Note Generated!");
 }
 
@@ -198,8 +194,8 @@ void play_note() {
   //sequencer_step();
   for(int i = 0; i < 8; i++) {
     long ms = micros();
-    write_pot(CHANNEL_B, ( ms / 1500 ) % 255); // amplitude?
-    write_pot(CHANNEL_C, *(note + i));         // frequency
+    controller.write_pot(CHANNEL_D, ( ms / 1500 ) % 255); // amplitude?
+    controller.write_pot(CHANNEL_C, *(note + i));         // frequency
     // float diff = abs(sin(i));
     // diff = diff * (100 + diff);
     // Serial.print("[p: ");
@@ -213,8 +209,6 @@ void play_note() {
     // Serial.print("\tdelay valu: ");
     // Serial.println(d);
     delay(20);
-    controller.write_pot(CHANNEL_A, i);   
-    controller.write_pot(CHANNEL_C, i);
   }
 }
 
