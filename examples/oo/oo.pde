@@ -30,7 +30,7 @@ const unsigned long POLLING_INTERVAL = 1000;
 const unsigned int WHEEL_CIRCUM = 2100; // bike wheel circumference in mm (2100 = almost exact for 700-23c wheels)
 // Initialize I/O Objects
 Led led(LEDPIN);
-Speedometer speedometer(HALL_EFFECT_PIN, WHEEL_CIRCUM, MEAN, SENSITIVITY, POLLING_INTERVAL);
+Speedometer speedometer(WHEEL_CIRCUM, 1);
 
 const int ENVELOPE_LENGTH = 800;
 
@@ -53,7 +53,7 @@ int c;
 
 int k[8] = {1, 255, 255, 255, 1, 255, 255, 255};
 
-#define MAX 15
+#define MAX 16
 
 int trackBank[maxSpeed][trackLength];
 
@@ -171,67 +171,68 @@ void setup()   {
   
   // Serial.begin(9600);  
   controller.initialize();
-  // Serial.print("Note Generated!");
+  speedometer.initialize();
+//  Serial.print("Note Generated!");
+  attachInterrupt(1, sensorTripped, RISING);
+  select_note(0);
+  controller.write_pot(CHANNEL_D, 0); // amplitude full
 }
 
 void loop()                     
 { 
-  select_note();
-  play_note();
+  int rpm = speedometer.checkRPM();
+  if (rpm > -1) {
+    select_note(rpm);    
+  }
+  play_note(); 
+}
+
+void sensorTripped() {
+  speedometer.sensorTripped();
 }
 
 int note0[] = {180, 170, 160, 190, 200, 220, 230, 235 };
-int note1[] = {100, 120, 130, 140, 150, 130, 140, 120 };
-int note2[] = {20,  40,  80,  90,  120, 110, 70,  50 };
+int note1[] = {120, 120, 130, 140, 150, 130, 140, 120 };
+int note2[] = {60,  40,  80,  90,  120, 110, 70,  50 };
+
 int *notes[] = {note0, note1, note2};
 int *note;
+int silent[] = {255, 255, 255, 255, 255, 255, 255, 255 }; // mostly silent frequency values
 
-void select_note() {
-  note = notes[(micros() / 2000) % 3];
+void select_note(int rpm) {  
+  int beat = map(rpm, 0, 150, 5000, 1); // number of milliseconds between beat changes
+  long selection = (millis() / beat) % 3;
+  if ( t % 8) {
+    note = notes[selection];
+  } else {
+    note = silent;
+  }
+  sequencer_step(); // update step
 }
 
 void play_note() {
   //sequencer_step();
+  long last, now;
+  int waitForIt = 300;
   for(int i = 0; i < 8; i++) {
-    long ms = micros();
-    controller.write_pot(CHANNEL_D, ( ms / 1500 ) % 255); // amplitude?
-    controller.write_pot(CHANNEL_C, *(note + i));         // frequency
-    // float diff = abs(sin(i));
-    // diff = diff * (100 + diff);
-    // Serial.print("[p: ");
-    // Serial.print(halfSteps[i]);
-    // Serial.print(" , ");
-    // Serial.print("d: ");
-    // Serial.print(diff);
-    // Serial.print("]");
-    // Serial.print("micros() valu: ");
-    // Serial.print(ms);
-    // Serial.print("\tdelay valu: ");
-    // Serial.println(d);
-    delay(20);
+    now = micros();
+    if (now - last < waitForIt) {
+      i--;
+    } else {
+      controller.write_pot(CHANNEL_D, ( now / 1500 ) % 255); // amplitude?
+      controller.write_pot(CHANNEL_C, *(note + i));         // frequency
+      last = now;
+    }
   }
 }
 
 void sequencer_step() {
-  int curTime = millis(); 
-
-  if (curTime > nextStep) {
-    
-    if(t<MAX) {
-      t+=1;
-    }
-    else {
-      changeTempo();
-      t=0;
-    }
-	led.toggle();
-    
-    nextStep = curTime + curTempo; 
+  if(t<MAX) {
+    t+=1;
   }
+  else {
+    t=0;
+  }
+  led.toggle();
 }
-
-void changeTempo() {
-  curTempo = map(speedometer.getSpeedKmph(), 0, 33, 180, 20);
-}
-
 

@@ -27,33 +27,21 @@ return cached speed.
 
 #include "WProgram.h"
 
-
-
 class Speedometer {
 public:
-	Speedometer(int sensorPin, int wheelCircumference, unsigned int mean, unsigned int sensitivity, unsigned long pollingInterval);
-	
-	unsigned long getSpeedKmph();	
-	float getSpeedMph();
+	Speedometer(int wheelCircumference, int resolution);
+  void initialize();
+  int checkRPM();
+  void sensorTripped();
 	
 private:
-	int sensorPin; 
-	int wheelCircumference; // in milimeters
-	unsigned long speedCalcCoefficient;
-		
-	unsigned int wheelRotations; 
-	
-	unsigned long resetTime;
-	unsigned long startTime;
-	
-	unsigned long measureSpeed();
-	unsigned long currentSpeed;
-	
-	// Hall effect sensor setup
-	unsigned int mean;
-	unsigned int sensitivity;
-	unsigned long pollingInterval;
-};
 
+  
+  int wheelCircumference;
+	volatile byte revs;
+  unsigned int rpm;
+  unsigned long oldTime;
+  int resolution;
+};
 
 #endif
