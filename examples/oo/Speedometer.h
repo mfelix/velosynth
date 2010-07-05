@@ -4,22 +4,26 @@
 */
 
 /*
-Use this class to keep track of a bicycle's speed using a Hall Effect sensor. 
+Use this class to keep track of a bicycle's speed using a digital Hall Effect sensor.
 
-Instantiate a new Speedometer object like this:
-	Speedometer speedomerName(0, 2100, 508, 40, 1000);
-The parameters, in order, are:
-	int sensorPin: the pin the Hall Effect sensor is connected to
-	int wheelCircumference: circumferences of the bike wheel and tire, in mm
-	int mean: the mean ("rest") value of the Hall Effect Sensor
-	int sensitivity: the sensitivity variable for the sensor
-	int pollingInterval: length of time (in microseconds) between each time the software checks the sensor.
+Because we're using a digital sensor with an interrput, this library takes two steps to configure.
+1.  Instantiate a new Speedometer object like so:
+      Speedometer speedomerName(2100, 2);
+    The parameters, in order, are:
+	    int wheelCircumference: circumference of the bike wheel and tire, in mm
+	    int resolution: the number of wheel revolutions that must occur for RPM to be recalculated.
+2.  Register an interrupt in your main sketch.
+    First, in your setup() function, call the attachInterrupt function like so:
+        attachInterrupt(1, interruptHandler, RISING); // replace 1 with the correct interrupt
+    Then, write a function to handle the interrupt. This function must call the speedometerName.sensorTripped function.
+      void interruptHandler() {
+        speedometerName.sensorTripped();
+      }
 
-To get the current speed, call speedometerName.getSpeed(). Speed, in Km/h is returned as an unsigned long.
-To get the current speed in miles/hour, call speedometerName.getSpeedMph(). Speed is returned as a float.
+To get the current speed in RPMs, call speedometerName.checkRPM(). The function will return the current speed ff the resolution tolerance has been met, or the most recently calculated speed if not. 
 
-Will need to add logic to change the speed update interval; currently, if the interval has not passed, the getSpeed() methods
-return cached speed.
+To get the current speed in km/hour, call speedometerName.checkKmph(). The function will return the current speed ff the resolution tolerance has been met, or the most recently calculated speed if not. 
+
 */
 
 #ifndef SPEEDOMETER_H
@@ -30,18 +34,21 @@ return cached speed.
 class Speedometer {
 public:
 	Speedometer(int wheelCircumference, int resolution);
-  void initialize();
-  int checkRPM();
-  void sensorTripped();
-	
-private:
 
-  
+  int checkRPM();
+  int checkKmph();
+
+  void sensorTripped();
+private:
+  void measure();
+
   int wheelCircumference;
 	volatile byte revs;
-  unsigned int rpm;
+  unsigned int rawRevs;
   unsigned long oldTime;
   int resolution;
+  unsigned long speedCalcCoefficient;
 };
+
 
 #endif

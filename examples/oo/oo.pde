@@ -171,7 +171,6 @@ void setup()   {
   
   // Serial.begin(9600);  
   controller.initialize();
-  speedometer.initialize();
 //  Serial.print("Note Generated!");
   attachInterrupt(1, sensorTripped, RISING);
   select_note(0);
@@ -180,10 +179,7 @@ void setup()   {
 
 void loop()                     
 { 
-  int rpm = speedometer.checkRPM();
-  if (rpm > -1) {
-    select_note(rpm);    
-  }
+  select_note(speedometer.checkRPM());
   play_note(); 
 }
 
