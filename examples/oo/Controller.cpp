@@ -5,11 +5,13 @@
 
 #include "Controller.h"
 
-Controller::Controller(byte dataIn, byte dataOut, byte spiClock, byte slaveSelect) {
+Controller::Controller(byte dataIn, byte dataOut, byte spiClock, byte slaveSelect, int amp, int freq) {
   this->dataIn = dataIn;
   this->dataOut = dataOut;
   this->spiClock = spiClock;
   this->slaveSelect = slaveSelect;
+  ampAddress = amp;
+  freqAddress = freq;
 }
 
 void Controller::initialize() {
@@ -51,4 +53,12 @@ byte Controller::write_pot(int address, int value)
   spi_transfer(address);
   spi_transfer(value);
   digitalWrite(slaveSelect,HIGH); //release chip, signal end transfer
+}
+
+void Controller::writeAmplitude(int value) {
+  write_pot(ampAddress, value);
+}
+
+void Controller::writeFrequency(int value) {
+  write_pot(freqAddress, value);
 }

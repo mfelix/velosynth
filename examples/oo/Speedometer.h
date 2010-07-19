@@ -44,7 +44,7 @@ private:
 
   int wheelCircumference;
 	volatile byte revs;
-  unsigned int rawRevs;
+  unsigned int revDur;
   unsigned long oldTime;
   int resolution;
   unsigned long speedCalcCoefficient;

@@ -14,20 +14,25 @@ void setup() {
 
 void loop()
 {
-
+  // Serial.println("test");
 }
 
 void sensorTripped() {
   Serial.print("+");
+  // if (!(revs % 10)) {
+  //   Serial.print(checkRPM());
+  //   Serial.print('rpm');
+  // }
   revs++;
 }
 
-void checkRPM() {
+int checkRPM() {
   if (revs >= resolution) { 
     rpm = 30*1000/(millis() - timeold)*revs;
     timeold = millis();
     revs = 0;
-    Serial.print(" ");
-    Serial.println(rpm,DEC);
+    // Serial.print(" ");
+    // Serial.println(rpm,DEC);
   }
+  return rpm;
 }

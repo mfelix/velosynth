@@ -2,6 +2,8 @@
 #include "Speedometer.h"
 #include "Envelope.h"
 #include "Controller.h"
+#include "Instrument.h"
+#include "Synthesizer.h"
 
 #define DATAOUT 11
 #define DATAIN 12
@@ -25,8 +27,10 @@ const int ENVELOPE_LENGTH = 800;
 // Initialize I/O Objects
 Led led(LEDPIN);
 Speedometer speedometer(WHEEL_CIRCUM, 1);
-Controller controller(DATAIN, DATAOUT, SPICLOCK, SLAVESELECT);
+Controller controller(DATAIN, DATAOUT, SPICLOCK, SLAVESELECT, CHANNEL_D, CHANNEL_C);
 Envelope envelope(ENVELOPE_LENGTH, 0, 255);
+Instrument noizy;
+Synthesizer synth(controller);
 
 int t = 0;
 
@@ -41,6 +45,7 @@ const int maxSpeed = 25; //kpm
 const int trackLength = 16;
 #define MAX 16
 
+int note [8];
 
 void setup() {
   // Serial.begin(9600);  
@@ -48,51 +53,29 @@ void setup() {
   attachInterrupt(1, sensorTripped, RISING);
   select_note(0);
   controller.write_pot(CHANNEL_D, 0); // amplitude full
+  noizy.generateNote(100, note);
 }
 
 void loop()                     
 { 
   select_note(speedometer.checkRPM());
-  play_note(); 
+  synth.playNote(note); 
 }
 
 void sensorTripped() {
   speedometer.sensorTripped();
 }
 
-int note0[] = {180, 170, 160, 190, 200, 220, 230, 235 };
-int note1[] = {120, 120, 130, 140, 150, 130, 140, 120 };
-int note2[] = {60,  40,  80,  90,  120, 110, 70,  50 };
+//int note0[] = {180, 170, 160, 190, 200, 220, 230, 235 };
+//int note1[] = {120, 120, 130, 140, 150, 130, 140, 120 };
+//int note2[] = {60,  40,  80,  90,  120, 110, 70,  50 };
 
-int *notes[] = {note0, note1, note2};
-int *note;
-int silent[] = {255, 255, 255, 255, 255, 255, 255, 255 }; // mostly silent frequency values
+//int *notes[] = {note0, note1, note2};
 
-void select_note(int rpm) {  
-  int beat = map(rpm, 0, 150, 5000, 1); // number of milliseconds between beat changes
-  long selection = (millis() / beat) % 3;
-  if ( t % 8) {
-    note = notes[selection];
-  } else {
-    note = silent;
-  }
+//int silent[] = {255, 255, 255, 255, 255, 255, 255, 255 }; // mostly silent frequency values
+
+void select_note(int rpm) {
   sequencer_step(); // update step
-}
-
-void play_note() {
-  //sequencer_step();
-  long last, now;
-  int waitForIt = 300;
-  for(int i = 0; i < 8; i++) {
-    now = micros();
-    if (now - last < waitForIt) {
-      i--;
-    } else {
-      controller.write_pot(CHANNEL_D, ( now / 1500 ) % 255); // amplitude?
-      controller.write_pot(CHANNEL_C, *(note + i));         // frequency
-      last = now;
-    }
-  }
 }
 
 void sequencer_step() {
