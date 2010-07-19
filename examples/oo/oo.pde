@@ -1,7 +1,3 @@
-/*
-  ad5206-controlled / sequencer
-  
-*/
 #include "Led.h"
 #include "Speedometer.h"
 #include "Envelope.h"
@@ -21,19 +17,14 @@
 
 // Pin bindings
 const int LEDPIN = 5;
-const int HALL_EFFECT_PIN = 0;
-const int MEAN = 508;  // sensor at rest (no magnet)
-const int SENSITIVITY = 40;  // sensor sensitivity
-const unsigned long POLLING_INTERVAL = 1000;
 
-// Other environmental constants
+// Environmental constants
 const unsigned int WHEEL_CIRCUM = 2100; // bike wheel circumference in mm (2100 = almost exact for 700-23c wheels)
+const int ENVELOPE_LENGTH = 800;
+
 // Initialize I/O Objects
 Led led(LEDPIN);
 Speedometer speedometer(WHEEL_CIRCUM, 1);
-
-const int ENVELOPE_LENGTH = 800;
-
 Controller controller(DATAIN, DATAOUT, SPICLOCK, SLAVESELECT);
 Envelope envelope(ENVELOPE_LENGTH, 0, 255);
 
@@ -48,130 +39,12 @@ unsigned long nextStep = millis() + curTempo;
 int curSpeed;
 const int maxSpeed = 25; //kpm
 const int trackLength = 16;
-
-int c;
-
-int k[8] = {1, 255, 255, 255, 1, 255, 255, 255};
-
 #define MAX 16
 
-int trackBank[maxSpeed][trackLength];
 
-int halfSteps[16] = {
-  235,
-222,
-209,
-198,
-186,
-176,
-166,
-157,
-148,
-140,
-132,
-125,
-  0,
-  0,
-  0,
-  0
-  };  
-
-int majorScale[16] = {
-  235,
-
-209,
-
-186,
-176,
-
-157,
-
-140,
-
-125,
-  118, //octave
-  235,
-
-209,
-
-186,
-176,
-
-157,
-
-140,
-
-125,
-  118 //octave
- 
-  };  
-
-int rhythm[16] = {
-  0,  //1 
-  0, 
-  0, 
-  0,
-  0, 
-  0, 
-  0, 
-  0,  //8
-  255,  
-  255,
-  255,
-  255,
-  255,
-  255,
-  255,
-  255,  //16
-  };  
-
-int rhythm2[16] = {
-  255,  //1 
-  0, 
-  255, 
-  0,
-  255, 
-  0, 
-  255, 
-  0,  //8
-  255,  
-  0,
-  255,
-  0,
-  255,
-  0,
-  255,
-  0,  //16
-  }; 
-  
-int rhythm3[16] = {
-  255,  //1 
-  255, 
-  255, 
-  255,
-  255, 
-  255, 
-  255, 
-  255,  //8
-  255,  
-  255,
-  255,
-  255,
-  255,
-  255,
-  255,
-  255,  //16
-  };   
-  
-int duration[8] = {10, 10, 10, 1, 1, 10, 10, 10};
-int pattern1[8] = {5, 10, 50, 10, 5, 77, 5, 10};
-int pattern2[8] = {333, 111, 444, 999, 111, 777, 333, 522};
-
-void setup()   {                
-  
+void setup() {
   // Serial.begin(9600);  
   controller.initialize();
-//  Serial.print("Note Generated!");
   attachInterrupt(1, sensorTripped, RISING);
   select_note(0);
   controller.write_pot(CHANNEL_D, 0); // amplitude full
@@ -231,4 +104,3 @@ void sequencer_step() {
   }
   led.toggle();
 }
-
