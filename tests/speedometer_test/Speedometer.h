@@ -43,7 +43,7 @@ private:
   void measure();
 
   int wheelCircumference;
-  static int revs;
+  volatile int revs;
   unsigned int revDur;
   unsigned long oldTime;
   int resolution;

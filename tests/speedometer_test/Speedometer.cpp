@@ -17,7 +17,7 @@ Speedometer::Speedometer(int wheelCircumference, int resolution) {
 
 int Speedometer::checkRPM() {
   measure();
-  return 60000 * revDur;
+  return 30000 / revDur;
 }
 
 int Speedometer::checkKmph() {
@@ -33,7 +33,7 @@ void Speedometer::sensorTripped() {
 void Speedometer::measure() {
   if (revs >= resolution) { 
     unsigned long curTime = millis();
-    revDur = revs / (curTime - oldTime);
+    revDur = (curTime - oldTime) / revs;
     oldTime = curTime;
     revs = 0;
   }
