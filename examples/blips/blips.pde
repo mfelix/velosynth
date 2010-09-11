@@ -31,32 +31,31 @@ Controller controller(DATAIN, DATAOUT, SPICLOCK, SLAVESELECT, AMP, FREQ);
 
 void setup() {
   controller.initialize();
-  Serial.begin(9600);
+  // Serial.begin(9600);
   attachInterrupt(1, sensorTripped, RISING);
   controller.write_pot(AMP, OFF);
   controller.write_pot(FREQ, OFF);
 }
 
 void loop() {
-  // rpm = speedometer.checkRPM();
-  // Serial.println(rpm);
+  rpm = speedometer.checkRPM();
+  int freq = map(rpm, 0, 100, 255, 0);
   if(blipIt){
-    blip();
+    blip(freq);
     blipIt = 0;
   }
 }
 
 void sensorTripped() {
   speedometer.sensorTripped();
-  // Serial.println("!");
   blipIt = 1;
 }
 
-void blip() {
-  controller.write_pot(FREQ, ON);
+void blip(int frequency) {
+  controller.write_pot(FREQ, frequency);
   controller.write_pot(AMP, ON);
   for (int amp = 0; amp < 255; amp++) {
-    delayMicroseconds(444);
+    delayMicroseconds(666);
     controller.write_pot(AMP, amp);
   }
 }
