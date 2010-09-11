@@ -1,38 +1,26 @@
-// speedometer test
-//
-// adapted from: http://www.arduino.cc/playground/Main/ReadingRPM
+#include "Speedometer.h"
 
-volatile byte revs = 0;
-unsigned int rpm = 0;
-unsigned long timeold = 0;
-int resolution = 2; // decrease for faster update
- 
+// bike wheel circumference in mm (2100 = almost exact for 700-23c wheels)
+const unsigned int WHEEL_CIRCUM = 2100;
+
+int rpm;
+
+// make a speedometer object!
+Speedometer speedometer(WHEEL_CIRCUM, 1);
+
+
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(9600);  
   attachInterrupt(1, sensorTripped, RISING);
 }
 
-void loop()
-{
-  // Serial.println("test");
+void loop() {
+  rpm = speedometer.checkRPM();
+  
+
 }
 
 void sensorTripped() {
-  Serial.print("+");
-  // if (!(revs % 10)) {
-  //   Serial.print(checkRPM());
-  //   Serial.print('rpm');
-  // }
-  revs++;
-}
-
-int checkRPM() {
-  if (revs >= resolution) { 
-    rpm = 30*1000/(millis() - timeold)*revs;
-    timeold = millis();
-    revs = 0;
-    // Serial.print(" ");
-    // Serial.println(rpm,DEC);
-  }
-  return rpm;
+  speedometer.sensorTripped();
+  Serial.println("!");
 }

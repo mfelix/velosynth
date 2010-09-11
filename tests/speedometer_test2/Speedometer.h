@@ -33,7 +33,7 @@ To get the current speed in km/hour, call speedometerName.checkKmph(). The funct
 
 class Speedometer {
 public:
-	Speedometer(int wheelCircumference, int resolution);
+  Speedometer(int wheelCircumference, int resolution);
 
   int checkRPM();
   int checkKmph();
@@ -43,8 +43,10 @@ private:
   void measure();
 
   int wheelCircumference;
-	volatile byte revs;
+  int revs;
+  unsigned int rpm;
   unsigned int revDur;
+  unsigned long curTime;
   unsigned long oldTime;
   int resolution;
   unsigned long speedCalcCoefficient;

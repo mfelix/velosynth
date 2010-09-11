@@ -10,7 +10,7 @@ Speedometer::Speedometer(int wheelCircumference, int resolution) {
   this->revs = 0;
   this->oldTime = millis();
   this->resolution = resolution;
-
+  
   // 1,000,000 mm = 1 km
   speedCalcCoefficient = this->wheelCircumference / 1000000;
 }
