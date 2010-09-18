@@ -1,0 +1,6 @@
+x  y  z  sens feelings
+______________________
+f2 a  f1 250  dislike
+f1 a  f2 250  like, video'd
+
+
