@@ -1,5 +1,4 @@
 #include "Controller.h"
-
 #include <Wire.h>
 #include "LibCompass.h"
 
@@ -35,6 +34,7 @@ void setup() {
   Serial.begin(9600);
   controller.write_pot(AMP, OFF);
   controller.write_pot(FREQ, OFF);
+  Serial.println("YO");
 }
 
 void loop() {
@@ -46,6 +46,7 @@ void loop() {
     blipIt = 0;
     delay(1000);
   }
+  delay(10);
 }
 
 void blip(int frequency) {
@@ -58,7 +59,8 @@ void blip(int frequency) {
 }
 
 void checkNorth() {
-  float heading = getHeading();
+  int heading;
+  heading = int(compass.GetHeading());
   int high = 330;
   int low = 30;
   if (heading > high || heading < low) {
@@ -68,8 +70,9 @@ void checkNorth() {
 
 float getHeading() {
   float heading = compass.GetHeading();
-  heading = (heading + NORTH_OFFSET) % 360;
+  //heading = (heading + NORTH_OFFSET) % 360; 
   return heading;
+
 }
 
 void printHeading() {
